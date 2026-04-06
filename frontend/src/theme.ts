@@ -3,31 +3,31 @@ import { createTheme } from '@mui/material/styles'
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#ee8faf',
-      light: '#f6afc6',
-      dark: '#da728d',
-      contrastText: '#fff7fb',
+      main: '#f47202',
+      light: '#febd61',
+      dark: '#e92300',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#b25f82',
-      light: '#ffd7e6',
-      dark: '#8f4566',
-      contrastText: '#fff7fb',
+      main: '#e92300',
+      light: '#f7b9b1',
+      dark: '#f17b6b',
+      contrastText: '#ffffff',
     },
     background: {
-      default: '#fff7f4',
-      paper: '#fffafc',
+      default: '#fef2eb',
+      paper: '#ffffff',
     },
     text: {
       primary: '#42293a',
       secondary: '#6d5260',
     },
     warning: {
-      main: '#d78b38',
-      light: '#fff4e8',
-      dark: '#9e5f18',
+      main: '#ffa900',
+      light: '#fdd6b1',
+      dark: '#f47202',
     },
-    divider: '#e7c6d3',
+    divider: '#f7b9b1',
   },
   shape: {
     borderRadius: 3,
@@ -61,18 +61,3 @@ export const theme = createTheme({
     },
   },
 })
-
-export const chatThemeTokens = {
-  pageBackground: '#fff7f4',
-  shellBackground: '#fffafc',
-  shellBorder: '#edd2dc',
-  shellShadow: '0 18px 40px rgba(143, 69, 102, 0.10)',
-  transcriptBackground: '#fffdfd',
-  transcriptBorder: '#f3d9e4',
-  agentBubbleBackground: '#fff0f6',
-  agentBubbleBorder: '#ecc8d8',
-  composerBackground: '#fffafc',
-  composerBorder: '#f0d6e1',
-  userBubbleBackground: '#ee8faf',
-  sendButtonBackground: '#ee8faf',
-} as const

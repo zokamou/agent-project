@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { assistRouter } from './routes/assistRoutes'
+import { loadKnowledgeBase } from './data/knowledgeBase'
 
 dotenv.config()
 
@@ -8,17 +10,9 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use('/api', assistRouter)
 
-app.post('/api/assist', (req, res) => {
-  const { question } = req.body
-
-  console.log('Incoming question:', question)
-
-  res.json({
-    message: 'Backend working!',
-    question,
-  })
-})
+loadKnowledgeBase()
 
 const PORT = 3001
 

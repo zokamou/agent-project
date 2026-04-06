@@ -1,5 +1,4 @@
 import { Avatar, Box, Paper, Typography } from '@mui/material'
-import { chatThemeTokens } from '../theme'
 
 type AgentChatMessageProps = {
   message: string
@@ -12,8 +11,8 @@ export const AgentChatMessage = ({ message }: AgentChatMessageProps) => {
         sx={{
           width: 40,
           height: 40,
-          bgcolor: 'secondary.light',
-          color: 'secondary.dark',
+          bgcolor: 'warning.light',
+          color: 'primary.main',
           fontWeight: 700,
         }}
       >
@@ -25,7 +24,7 @@ export const AgentChatMessage = ({ message }: AgentChatMessageProps) => {
           sx={{
             display: 'block',
             mb: 0.75,
-            color: 'secondary.main',
+            color: 'primary.main',
             fontWeight: 700,
           }}
         >
@@ -37,9 +36,10 @@ export const AgentChatMessage = ({ message }: AgentChatMessageProps) => {
             px: 2,
             py: 1.5,
             borderRadius: '22px 22px 22px 8px',
-            backgroundColor: chatThemeTokens.agentBubbleBackground,
+            backgroundColor: 'background.paper',
             color: 'text.primary',
-            border: `1px solid ${chatThemeTokens.agentBubbleBorder}`,
+            border: '1px solid',
+            borderColor: 'divider',
           }}
         >
           <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>

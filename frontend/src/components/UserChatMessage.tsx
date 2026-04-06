@@ -1,5 +1,4 @@
 import { Box, Paper, Typography } from '@mui/material'
-import { chatThemeTokens } from '../theme'
 
 type UserChatMessageProps = {
   message: string
@@ -27,8 +26,10 @@ export const UserChatMessage = ({ message }: UserChatMessageProps) => {
             px: 2,
             py: 1.5,
             borderRadius: '22px 22px 8px 22px',
-            backgroundColor: chatThemeTokens.userBubbleBackground,
-            color: 'primary.contrastText',
+            backgroundColor: 'secondary.light',
+            color: 'text.primary',
+            border: '1px solid',
+            borderColor: 'divider',
           }}
         >
           <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>

@@ -1,6 +1,5 @@
 import type { KeyboardEvent } from 'react'
-import { Box, Button, CircularProgress, TextField, Typography } from '@mui/material'
-import { chatThemeTokens } from '../theme'
+import { Box, Button, CircularProgress, TextField } from '@mui/material'
 import type { ChatInputProps } from '../types/ChatTypes'
 
 export const ChatInput = ({
@@ -24,20 +23,15 @@ export const ChatInput = ({
         onSubmit()
       }}
       sx={{
-        p: { xs: 2, sm: 2.5 },
-        borderRadius: 1,
-        border: `1px solid ${chatThemeTokens.composerBorder}`,
-        backgroundColor: chatThemeTokens.composerBackground,
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: 2,
+        alignItems: { xs: 'stretch', sm: 'flex-end' },
+        p: 0,
+        borderRadius: 0,
+        backgroundColor: 'transparent',
       }}
     >
-      <Typography
-        component="label"
-        htmlFor="agent-assist-input"
-        sx={{ display: 'block', mb: 1.25, color: 'text.secondary', fontWeight: 600 }}
-      >
-        Your message
-      </Typography>
-
       <TextField
         id="agent-assist-input"
         fullWidth
@@ -53,8 +47,8 @@ export const ChatInput = ({
         sx={{
           '& .MuiOutlinedInput-root': {
             alignItems: 'flex-start',
-            borderRadius: .5,
-            backgroundColor: 'common.white',
+            borderRadius: 3,
+            backgroundColor: 'background.default',
           },
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: 'divider',
@@ -68,27 +62,20 @@ export const ChatInput = ({
         }}
       />
 
-      <Box
-        sx={{
-          mt: 1.5,
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between',
-          alignItems: { xs: 'stretch', sm: 'center' },
-          gap: 1.25,
-        }}
-      >
-
         <Button
           type="submit"
           variant="contained"
           disabled={isSubmitting || value.trim().length === 0}
           sx={{
-            minWidth: 140,
-            alignSelf: { xs: 'flex-end', sm: 'auto' },
+            minWidth: { xs: '100%', sm: 140 },
+            alignSelf: { xs: 'stretch', sm: 'auto' },
             px: 3,
             py: 1.1,
-            backgroundColor: chatThemeTokens.sendButtonBackground,
+            backgroundColor: 'primary.main',
+            color: 'primary.contrastText',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+            },
           }}
           startIcon={
             isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
@@ -96,7 +83,6 @@ export const ChatInput = ({
         >
           {isSubmitting ? 'Sending...' : 'Send message'}
         </Button>
-      </Box>
     </Box>
   )
 }

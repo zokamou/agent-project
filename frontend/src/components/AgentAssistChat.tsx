@@ -1,92 +1,27 @@
-import { useState } from 'react'
 import {
-  Alert,
   Box,
   Paper,
   Stack,
   Typography,
 } from '@mui/material'
-import type {
-  AssistResponse,
-  ChatMessage,
-  ChatRole,
-  RequestStatus,
-} from '../types/ChatTypes'
-import { chatThemeTokens } from '../theme'
+import type { AgentAssistChatProps } from '../types/ChatTypes'
 import { AgentChatMessage } from './AgentChatMessage'
 import { ChatInput } from './ChatInput'
 import { UserChatMessage } from './UserChatMessage'
-
-const createMessage = (role: ChatRole, text: string): ChatMessage => ({
-  id: `${role}-${crypto.randomUUID()}`,
-  role,
-  text,
-})
-
-const initialMessages: ChatMessage[] = [
-  createMessage(
-    'agent',
-    'Hi there! Ask me anything and I will send it to the backend for a reply.'
-  ),
-]
-
-export const AgentAssistChat = () => {
-  const [draft, setDraft] = useState('')
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
-  const [status, setStatus] = useState<RequestStatus>('idle')
-
-  const handleSubmit = async () => {
-    const trimmedDraft = draft.trim()
-
-    if (!trimmedDraft || status === 'submitting') {
-      return
-    }
-
-    const userMessage = createMessage('user', trimmedDraft)
-
-    setMessages((currentMessages) => [...currentMessages, userMessage])
-    setDraft('')
-    setStatus('submitting')
-
-    try {
-      const response = await fetch('/api/assist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ question: trimmedDraft }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`)
-      }
-
-      const data = (await response.json()) as AssistResponse
-
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        createMessage('agent', data.message),
-      ])
-      setStatus('idle')
-    } catch {
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        createMessage(
-          'agent',
-          'Something went wrong reaching the assistant. Please try again in a moment.'
-        ),
-      ])
-      setStatus('error')
-    }
-  }
-
+export const AgentAssistChat = ({
+  draft,
+  messages,
+  onDraftChange,
+  onSubmit,
+  status,
+}: AgentAssistChatProps) => {
   return (
     <Box
       sx={{
         minHeight: '100vh',
         px: { xs: 2, sm: 3 },
         py: { xs: 3, sm: 5 },
-        background: chatThemeTokens.pageBackground,
+        backgroundColor: 'background.default',
       }}
     >
       <Paper
@@ -96,13 +31,13 @@ export const AgentAssistChat = () => {
           minHeight: 'calc(100vh - 48px)',
           mx: 'auto',
           p: { xs: 2.5, sm: 4 },
-          borderRadius: 1,
+          borderRadius: 3,
           display: 'flex',
           flexDirection: 'column',
           gap: 3,
-          border: `1px solid ${chatThemeTokens.shellBorder}`,
-          backgroundColor: chatThemeTokens.shellBackground,
-          boxShadow: chatThemeTokens.shellShadow,
+          border: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: 'background.paper',
         }}
       >
         <Box>
@@ -114,7 +49,7 @@ export const AgentAssistChat = () => {
               fontWeight: 700,
             }}
           >
-            Agent Assist
+            Chat
           </Typography>
           <Typography
             variant="h3"
@@ -145,44 +80,55 @@ export const AgentAssistChat = () => {
           elevation={0}
           sx={{
             flex: 1,
-            p: { xs: 2, sm: 3 },
-            borderRadius: 1,
-            border: `1px solid ${chatThemeTokens.transcriptBorder}`,
-            backgroundColor: chatThemeTokens.transcriptBackground,
-            maxHeight: '60vh',
-            overflowY: 'auto',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: 'background.paper',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            overflow: 'hidden',
           }}
         >
-          <Stack spacing={2.25}>
-            {messages.map((message) =>
-              message.role === 'user' ? (
-                <UserChatMessage key={message.id} message={message.text} />
-              ) : (
-                <AgentChatMessage key={message.id} message={message.text} />
-              )
-            )}
-          </Stack>
-        </Paper>
-
-        {status === 'error' ? (
-          <Alert
-            severity="warning"
+          <Box
             sx={{
-              borderRadius: 1,
-              backgroundColor: 'warning.light',
+              flex: 1,
+              minHeight: 0,
+              maxHeight: '58vh',
+              overflowY: 'auto',
+              px: { xs: 2, sm: 3 },
+              pt: { xs: 2, sm: 3 },
+              pb: { xs: 1.5, sm: 2 },
             }}
           >
-            The last request did not complete, but your conversation is still
-            here and you can try again.
-          </Alert>
-        ) : null}
+            <Stack spacing={2.25}>
+              {messages.map((message) =>
+                message.role === 'user' ? (
+                  <UserChatMessage key={message.id} message={message.text} />
+                ) : (
+                  <AgentChatMessage key={message.id} message={message.text} />
+                )
+              )}
+            </Stack>
+          </Box>
 
-        <ChatInput
-          value={draft}
-          onChange={setDraft}
-          onSubmit={handleSubmit}
-          isSubmitting={status === 'submitting'}
-        />
+          <Box
+            sx={{
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              px: { xs: 1.25, sm: 2 },
+              py: { xs: 1.25, sm: 1.5 },
+              backgroundColor: 'background.paper',
+            }}
+          >
+            <ChatInput
+              value={draft}
+              onChange={onDraftChange}
+              onSubmit={onSubmit}
+              isSubmitting={status === 'submitting'}
+            />
+          </Box>
+        </Paper>
       </Paper>
     </Box>
   )
