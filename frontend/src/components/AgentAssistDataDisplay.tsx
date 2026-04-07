@@ -65,7 +65,7 @@ export const AgentAssistDataDisplay = ({
             Suggested reply
           </Typography>
           <Button 
-            sx={{border: '1px solid', borerColor: 'primary.main', px: 2}}
+            sx={{border: '1px solid', borderColor: 'primary.main', px: 2}}
             size="small" 
             onClick={() => onDraftChange(analysis?.suggestedReply ?? '')} disabled={!analysis?.suggestedReply || status === 'submitting'}>
             <Typography>

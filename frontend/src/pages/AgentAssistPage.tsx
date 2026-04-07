@@ -39,6 +39,8 @@ export const AgentAssistPage = () => {
   const [assistantAnalysis, setAssistantAnalysis] =
     useState<AssistantAnalysis | null>(null)
 
+
+  // initially load message history on page mount
   useEffect(() => {
     const loadConversation = async () => {
       try {
@@ -58,13 +60,12 @@ export const AgentAssistPage = () => {
     void loadConversation()
   }, [])
 
+  // analyze tenant message and get assist response from backend
   const requestAssistAnalysis = async (tenantMessage: string) => {
-    if (!tenantMessage.trim() || status === 'submitting') {
+    if (status === 'submitting') {
       return
     }
-
     setStatus('submitting')
-
     try {
       const response = await fetch('/api/tenant-message', {
         method: 'POST',
@@ -97,22 +98,20 @@ export const AgentAssistPage = () => {
     }
   }
 
+  // handle tenant message submission
   const handleTenantMessage = async () => {
     const tenantMessage = draft.trim()
-
-    if (!tenantMessage) {
-      return
-    }
 
     await requestAssistAnalysis(tenantMessage)
     setDraft('')
     setNextSpeaker('employee')
   }
 
+  // handle employee message submission
   const handleEmployeeReply = async () => {
     const employeeMessage = draft.trim()
 
-    if (!employeeMessage || status === 'submitting') {
+    if (status === 'submitting') {
       return
     }
 
@@ -136,6 +135,7 @@ export const AgentAssistPage = () => {
       const data = (await response.json()) as EmployeeMessageResponse
       setMessages(mapConversationToChatMessages(data.conversation))
       setDraft('')
+      // alternate speaker back to tenant after employee reply
       setNextSpeaker('tenant')
       setStatus('idle')
     } catch (error) {
