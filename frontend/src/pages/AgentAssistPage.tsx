@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Box } from '@mui/material'
 import { AgentAssistChat } from '../components/AgentAssistChat'
 import { AgentAssistDataDisplay } from '../components/AgentAssistDataDisplay'
@@ -6,35 +6,55 @@ import type {
   AssistResponse,
   AssistantAnalysis,
   ChatMessage,
-  ChatRole,
+  ComposerRole,
+  ConversationResponse,
+  ConversationMessage,
+  EmployeeMessageResponse,
   RequestStatus,
 } from '../types/ChatTypes'
 
-const potentialMessages: string[] = [
-  'I need help getting into my storage unit.',
-  'Can you tell me how to reset my password?',
-  'Is anyone on site right now to help me?',
-  'What are your hours of operation?',
-  'Can I get a copy of my last invoice?',
-]
+const mapConversationToChatMessages = (
+  conversation: ConversationMessage[]
+): ChatMessage[] => {
+  const mappedMessages: ChatMessage[] = []
 
-const initialTenantMessage =
-  potentialMessages[Math.floor(Math.random() * potentialMessages.length)]
+  for (const message of conversation) {
+    mappedMessages.push({
+      id: message.id ?? crypto.randomUUID(),
+      role: message.role === 'tenant' ? 'user' : 'agent',
+      text: message.text,
+    })
+  }
 
-const createMessage = (role: ChatRole, text: string): ChatMessage => ({
-  id: `${role}-${crypto.randomUUID()}`,
-  role,
-  text,
-})
+  return mappedMessages
+}
 
 export const AgentAssistPage = () => {
   const [draft, setDraft] = useState('')
+  const [nextSpeaker, setNextSpeaker] = useState<ComposerRole>('tenant')
   const [status, setStatus] = useState<RequestStatus>('idle')
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [assistantAnalysis, setAssistantAnalysis] = useState<AssistantAnalysis | null>(
-    null
-  )
-  const hasRequestedInitialAnalysis = useRef(false)
+  const [assistantAnalysis, setAssistantAnalysis] =
+    useState<AssistantAnalysis | null>(null)
+
+  useEffect(() => {
+    const loadConversation = async () => {
+      try {
+        const response = await fetch('/api/messages')
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`)
+        }
+
+        const data = (await response.json()) as ConversationResponse
+        setMessages(mapConversationToChatMessages(data.conversation))
+      } catch {
+        setMessages([])
+      }
+    }
+
+    void loadConversation()
+  }, [])
 
   const requestAssistAnalysis = async (tenantMessage: string) => {
     if (!tenantMessage.trim() || status === 'submitting') {
@@ -44,12 +64,12 @@ export const AgentAssistPage = () => {
     setStatus('submitting')
 
     try {
-      const response = await fetch('/api/assist', {
+      const response = await fetch('/api/tenant-message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question: tenantMessage }),
+        body: JSON.stringify({ latestTenantMessage: tenantMessage }),
       })
 
       if (!response.ok) {
@@ -57,76 +77,137 @@ export const AgentAssistPage = () => {
       }
 
       const data = (await response.json()) as AssistResponse
+      setMessages(mapConversationToChatMessages(data.conversation))
       setAssistantAnalysis(data)
       setStatus('idle')
     } catch {
       setAssistantAnalysis({
         question: tenantMessage,
         message: 'Something went wrong reaching the assistant.',
-        conversationSummary: 'The assistant could not analyze the latest tenant message.',
-        suggestedReply: 'Thanks for your patience while I look into that for you.',
+        conversationSummary:
+          'The assistant could not analyze the latest tenant message.',
+        suggestedReply:
+          'Thanks for your patience while I look into that for you.',
+        matchedItems: [],
+        relatedItems: [],
+        relatedCategories: [],
       })
       setStatus('error')
     }
   }
 
-  const handleTenantMessage = async (
-    tenantMessage: string,
-    options?: { appendToMessages?: boolean }
-  ) => {
-    const trimmedMessage = tenantMessage.trim()
+  const handleTenantMessage = async () => {
+    const tenantMessage = draft.trim()
 
-    if (!trimmedMessage) {
+    if (!tenantMessage) {
       return
     }
 
-    if (options?.appendToMessages !== false) {
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        createMessage('user', trimmedMessage),
-      ])
-    }
-
-    await requestAssistAnalysis(trimmedMessage)
+    await requestAssistAnalysis(tenantMessage)
+    setDraft('')
+    setNextSpeaker('employee')
   }
 
-  const requestInitialTenantAnalysis = useEffectEvent(async () => {
-    await handleTenantMessage(initialTenantMessage)
-  })
+  const handleEmployeeReply = async () => {
+    const employeeMessage = draft.trim()
 
-  useEffect(() => {
-    if (hasRequestedInitialAnalysis.current) {
+    if (!employeeMessage || status === 'submitting') {
       return
     }
 
-    hasRequestedInitialAnalysis.current = true
-    void requestInitialTenantAnalysis()
-  }, [])
+    setStatus('submitting')
 
-  const handleEmployeeReply = () => {
-    const trimmedDraft = draft.trim()
+    try {
+      const response = await fetch('/api/employee-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: employeeMessage }),
+      })
 
-    if (!trimmedDraft || status === 'submitting') {
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`)
+      }
+
+      const data = (await response.json()) as EmployeeMessageResponse
+      setMessages(mapConversationToChatMessages(data.conversation))
+      setDraft('')
+      setNextSpeaker('tenant')
+      setStatus('idle')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (nextSpeaker === 'tenant') {
+      await handleTenantMessage()
       return
     }
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      createMessage('agent', trimmedDraft),
-    ])
-    setDraft('')
+    await handleEmployeeReply()
+  }
+
+  const handleClearConversation = async () => {
+    if (status === 'submitting') {
+      return
+    }
+
+    setStatus('submitting')
+
+    try {
+      const response = await fetch('/api/clear-messages', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`)
+      }
+
+      const data = (await response.json()) as ConversationResponse
+      setMessages(mapConversationToChatMessages(data.conversation))
+      setAssistantAnalysis(null)
+      setDraft('')
+      setNextSpeaker('tenant')
+      setStatus('idle')
+    } catch {
+      setStatus('error')
+    }
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row', height: '100vh', p: 3, gap: 3 }}>
-      <AgentAssistChat
-        draft={draft}
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        height: '100vh',
+        gap: 3,
+        p: 3,
+      }}
+    >
+      <Box sx={{ width: '40%', flexShrink: 0, minWidth: 0, height: '100%' }}>
+        <AgentAssistChat
+          draft={draft}
+          nextSpeaker={nextSpeaker}
         messages={messages}
         onDraftChange={setDraft}
-        onSubmit={handleEmployeeReply}
+        onNextSpeakerChange={setNextSpeaker}
+        onClearConversation={handleClearConversation}
+        onSubmit={handleSubmit}
         status={status}
       />
-      <AgentAssistDataDisplay analysis={assistantAnalysis} status={status} onDraftChange={setDraft} />
+      </Box>
+      <Box sx={{ width: '60%', flexShrink: 0, minWidth: 0, height: '100%' }}>
+        <AgentAssistDataDisplay
+          analysis={assistantAnalysis}
+          status={status}
+          onDraftChange={(value) => {
+            setDraft(value)
+            setNextSpeaker('employee')
+          }}
+        />
+      </Box>
     </Box>
   )
 }

@@ -3,6 +3,9 @@ import { Box, Button, CircularProgress, TextField } from '@mui/material'
 import type { ChatInputProps } from '../types/ChatTypes'
 
 export const ChatInput = ({
+  id,
+  placeholder,
+  submitLabel,
   value,
   onChange,
   onSubmit,
@@ -26,23 +29,22 @@ export const ChatInput = ({
         display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },
         gap: 2,
-        alignItems: { xs: 'stretch', sm: 'flex-end' },
         p: 0,
         borderRadius: 0,
         backgroundColor: 'transparent',
       }}
     >
       <TextField
-        id="agent-assist-input"
+        id={id}
         fullWidth
         multiline
-        minRows={3}
+        minRows={1}
         maxRows={8}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isSubmitting}
-        placeholder="Ask the backend something nice..."
+        placeholder={placeholder}
         variant="outlined"
         sx={{
           '& .MuiOutlinedInput-root': {
@@ -62,27 +64,25 @@ export const ChatInput = ({
         }}
       />
 
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={isSubmitting || value.trim().length === 0}
-          sx={{
-            minWidth: { xs: '100%', sm: 140 },
-            alignSelf: { xs: 'stretch', sm: 'auto' },
-            px: 3,
-            py: 1.1,
-            backgroundColor: 'primary.main',
-            color: 'primary.contrastText',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-            },
-          }}
-          startIcon={
-            isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
-          }
-        >
-          {isSubmitting ? 'Sending...' : 'Send message'}
-        </Button>
+      <Button
+        type="submit"
+        disabled={isSubmitting || value.trim().length === 0}
+        sx={{
+          px: 3,
+          py: 1.1,
+          height: { xs: 'auto', sm: 44 },
+          backgroundColor: 'primary.main',
+          color: 'primary.contrastText',
+          '&:hover': {
+            backgroundColor: 'primary.dark',
+          },
+        }}
+        startIcon={
+          isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
+        }
+      >
+        {isSubmitting ? 'Sending...' : submitLabel}
+      </Button>
     </Box>
   )
 }

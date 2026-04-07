@@ -1,3 +1,5 @@
+import { KnowledgeItem } from "./knowledgeBaseTypes"
+
 export type ConversationRole = 'tenant' | 'employee'
 
 export type ConversationMessage = {
@@ -12,17 +14,20 @@ export type AssistRequest = {
   question?: string
 }
 
-export type KnowledgeItem = {
-  id: string
-  category: string
-  title: string
-  content: string
-  keywords: string[]
-  relatedCategories: string[]
+export type EmployeeMessageRequest = {
+  message: string
+  conversation?: ConversationMessage[]
 }
 
 export type MatchedKnowledgeItem = KnowledgeItem & {
   matchReason: string
+}
+
+export interface PineconeMetadata {
+  category: string;
+  title: string;
+  text: string; 
+  relatedCategories: string[];
 }
 
 export type AgentAssistAnalysis = {
@@ -38,6 +43,18 @@ export type AssistResponse = {
   currentIntent: string
   conversationSummary: string
   matchedItems: MatchedKnowledgeItem[]
+  relatedItems: KnowledgeItem[]
   relatedCategories: string[]
   suggestedReply: string
+  conversation: ConversationMessage[]
+}
+
+export type EmployeeMessageResponse = {
+  message: string
+  role: 'employee'
+  conversation: ConversationMessage[]
+}
+
+export type ConversationResponse = {
+  conversation: ConversationMessage[]
 }

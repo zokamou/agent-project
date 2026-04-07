@@ -1,10 +1,7 @@
 export type KnowledgeItem = {
   id: string
-  worksheet: string
   category: string
-  variableName: string
+  title: string
   content: string
-  status: string
-  optional: string
-  searchableText: string
+  relatedCategories: string[]
 }
