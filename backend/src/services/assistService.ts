@@ -5,14 +5,13 @@ import type {
   ConversationResponse,
   EmployeeMessageRequest,
   EmployeeMessageResponse,
+  ChannelType,
   PineconeMetadata,
 } from '../types/assistTypes'
-import { KnowledgeItem } from '../types/knowledgeBaseTypes'
-import {
-  generateAssistAnalysis,
-} from '../agents/agentAssistAgent'
+import type { KnowledgeItem } from '../types/knowledgeBaseTypes'
+import { generateAssistAnalysis } from '../agents/agentAssistAgent'
 import { index } from '../data/pineconeClient'
-import { Hit } from '@pinecone-database/pinecone'
+import type { Hit } from '@pinecone-database/pinecone'
 
 const conversationMessages: ConversationMessage[] = []
 
@@ -48,67 +47,67 @@ export const clearConversationMessages = (): ConversationResponse => {
 export const getAssistResponse = async (
   request: AssistRequest
 ): Promise<AssistResponse> => {
-
-  const latestTenantMessage = request.latestTenantMessage ?? request.question ?? ''
+  const latestTenantMessage = request.latestTenantMessage
+  const channel: ChannelType = request.channel ?? 'chat'
 
   addConversationMessage('tenant', latestTenantMessage)
 
-  const primaryTopicSearch = await index.searchRecords({
-    query: {
-      inputs: {
-        text: latestTenantMessage,
-      },
-      topK: 5,
-    },
+  const primaryResult = await index.searchRecords({
+    query: { inputs: { text: latestTenantMessage }, topK: 3 },
   })
 
-  if (primaryTopicSearch.result.hits.length === 0) {
-    return {question: latestTenantMessage,
-      message: 'No relevant information found.',
-      currentIntent: '',
-      conversationSummary: '',
+  if (primaryResult.result.hits.length === 0) {
+    return {
+      usedSources: '',
       matchedItems: [],
       relatedItems: [],
       relatedCategories: [],
       suggestedReply: '',
-      conversation: getConversationMessages()
-    };
+      conversation: getConversationMessages(),
+    }
   }
 
-  const topHit = primaryTopicSearch.result.hits[0];
-  const topFields = topHit.fields as PineconeMetadata;
-  const primaryCategory = topFields.category;
+  const matchedKnowledgeItems = primaryResult.result.hits.map((hit) =>
+    mapHitToItem(hit)
+  )
+  const primaryIds = new Set(matchedKnowledgeItems.map((item) => item.id))
 
-  const relatedSearch = await index.searchRecords({
+  const primaryCategories = matchedKnowledgeItems.map((item) => item.category)
+  const primaryTitles = matchedKnowledgeItems.map((item) => item.title)
+  const expansionTerms = [...new Set([
+    ...primaryCategories,
+    ...primaryTitles,
+  ])]
+
+  const relatedResult = await index.searchRecords({
     query: {
-      inputs: { text: `Policies and procedures related to ${primaryCategory}` },
+      inputs: { text: expansionTerms.join(' ') },
+      topK: 6,
       filter: { 
-        category: { $ne: primaryCategory }},
-      topK: 4
-    }
-  });
+        category: { $nin: [...primaryCategories, "Auctions", "Live In Unit", "Legal"] },
+      }
+    },
+  })
+  const matchedRelatedKnowledgeItems = relatedResult.result.hits
+    .map(mapHitToItem)
+    .filter((item) => !primaryIds.has(item.id))
+    .slice(0, 3)
 
-  const matchedKnowledgeItems = [mapHitToItem(topHit)];
-  const matchedRelatedKnowledgeItems = relatedSearch.result.hits.map(hit => mapHitToItem(hit));
+  const analysis = await generateAssistAnalysis(
+    latestTenantMessage,
+    matchedKnowledgeItems,
+    matchedRelatedKnowledgeItems,
+    channel
+  )
 
-
-  const analysis = await generateAssistAnalysis(latestTenantMessage, matchedKnowledgeItems, matchedRelatedKnowledgeItems);
-
-return {
-    question: latestTenantMessage,
-    message: analysis.suggestedReply,
-    currentIntent: analysis.currentIntent,
-    conversationSummary: analysis.conversationSummary,
+  return {
     suggestedReply: analysis.suggestedReply,
-    matchedItems: matchedKnowledgeItems.map((item) => ({
-      ...item,
-      matchReason: 'Directly relevant based on semantic match',
-    })),
-    relatedItems: matchedRelatedKnowledgeItems.map((item) => ({
-      ...item,
-      matchReason: `Proactively identified as related to ${primaryCategory}`,
-    })),
-    relatedCategories: matchedRelatedKnowledgeItems.map(i => i.category),
+    usedSources: analysis.sourcesUsed,
+    matchedItems: matchedKnowledgeItems,
+    relatedItems: matchedRelatedKnowledgeItems,
+    relatedCategories: matchedRelatedKnowledgeItems.map(
+      (item) => item.category
+    ),
     conversation: getConversationMessages(),
   }
 }
@@ -121,20 +120,17 @@ export const createEmployeeMessage = async (
   addConversationMessage('employee', employeeMessage)
 
   return {
-    message: employeeMessage,
-    role: 'employee',
     conversation: getConversationMessages(),
   }
 }
 
-
 const mapHitToItem = (hit: Hit): KnowledgeItem => {
-  const fields = hit.fields as PineconeMetadata;
+  const fields = hit.fields as PineconeMetadata
+
   return {
     id: hit._id,
     category: fields.category,
     title: fields.title,
     content: fields.text,
-    relatedCategories: fields.relatedCategories || [],
-  };
-};
+  }
+}

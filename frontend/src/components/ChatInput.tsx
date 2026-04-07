@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react'
-import { Box, Button, CircularProgress, TextField } from '@mui/material'
+import { Box, Button, TextField } from '@mui/material'
 import type { ChatInputProps } from '../types/ChatTypes'
 
 export const ChatInput = ({
@@ -77,11 +77,8 @@ export const ChatInput = ({
             backgroundColor: 'primary.dark',
           },
         }}
-        startIcon={
-          isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
-        }
       >
-        {isSubmitting ? 'Sending...' : submitLabel}
+        {submitLabel}
       </Button>
     </Box>
   )

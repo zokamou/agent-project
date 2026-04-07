@@ -1,5 +1,6 @@
 export type ChatRole = 'user' | 'agent'
 export type ComposerRole = 'tenant' | 'employee'
+export type ChannelType = 'chat' | 'email' | 'phone'
 
 export type ChatMessage = {
   id: string
@@ -12,11 +13,6 @@ export type KnowledgeItem = {
   category: string
   title: string
   content: string
-  relatedCategories: string[]
-}
-
-export type MatchedKnowledgeItem = KnowledgeItem & {
-  matchReason: string
 }
 
 export type ConversationMessage = {
@@ -26,31 +22,23 @@ export type ConversationMessage = {
 }
 
 export type AssistantAnalysis = {
-  message: string
-  question: string
-  currentIntent?: string
-  conversationSummary?: string
   suggestedReply?: string
-  matchedItems?: MatchedKnowledgeItem[]
+  usedSources?: string
+  matchedItems?: KnowledgeItem[]
   relatedItems?: KnowledgeItem[]
   relatedCategories?: string[]
 }
 
 export type AssistResponse = {
-  message: string
-  question: string
-  currentIntent: string
-  conversationSummary: string
   suggestedReply: string
-  matchedItems: MatchedKnowledgeItem[]
+  usedSources: string
+  matchedItems: KnowledgeItem[]
   relatedItems: KnowledgeItem[]
   relatedCategories: string[]
   conversation: ConversationMessage[]
 }
 
 export type EmployeeMessageResponse = {
-  message: string
-  role: 'employee'
   conversation: ConversationMessage[]
 }
 
@@ -61,9 +49,11 @@ export type ConversationResponse = {
 export type RequestStatus = 'idle' | 'submitting' | 'error'
 
 export type AgentAssistChatProps = {
+  channel: ChannelType
   draft: string
   nextSpeaker: ComposerRole
   messages: ChatMessage[]
+  onChannelChange: (value: ChannelType) => void
   onDraftChange: (value: string) => void
   onNextSpeakerChange: (value: ComposerRole) => void
   onClearConversation: () => void

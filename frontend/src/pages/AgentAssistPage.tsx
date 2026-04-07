@@ -6,6 +6,7 @@ import type {
   AssistResponse,
   AssistantAnalysis,
   ChatMessage,
+  ChannelType,
   ComposerRole,
   ConversationResponse,
   ConversationMessage,
@@ -31,6 +32,7 @@ const mapConversationToChatMessages = (
 
 export const AgentAssistPage = () => {
   const [draft, setDraft] = useState('')
+  const [channel, setChannel] = useState<ChannelType>('chat')
   const [nextSpeaker, setNextSpeaker] = useState<ComposerRole>('tenant')
   const [status, setStatus] = useState<RequestStatus>('idle')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -69,10 +71,12 @@ export const AgentAssistPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ latestTenantMessage: tenantMessage }),
+        body: JSON.stringify({ latestTenantMessage: tenantMessage, channel }),
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Tenant message request failed:', response.status, errorText)
         throw new Error(`Request failed with status ${response.status}`)
       }
 
@@ -80,12 +84,9 @@ export const AgentAssistPage = () => {
       setMessages(mapConversationToChatMessages(data.conversation))
       setAssistantAnalysis(data)
       setStatus('idle')
-    } catch {
+    } catch (error) {
+      console.error('Unable to analyze tenant message:', error)
       setAssistantAnalysis({
-        question: tenantMessage,
-        message: 'Something went wrong reaching the assistant.',
-        conversationSummary:
-          'The assistant could not analyze the latest tenant message.',
         suggestedReply:
           'Thanks for your patience while I look into that for you.',
         matchedItems: [],
@@ -127,6 +128,8 @@ export const AgentAssistPage = () => {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Employee message request failed:', response.status, errorText)
         throw new Error(`Request failed with status ${response.status}`)
       }
 
@@ -135,7 +138,8 @@ export const AgentAssistPage = () => {
       setDraft('')
       setNextSpeaker('tenant')
       setStatus('idle')
-    } catch {
+    } catch (error) {
+      console.error('Unable to send employee reply:', error)
       setStatus('error')
     }
   }
@@ -162,6 +166,8 @@ export const AgentAssistPage = () => {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Clear conversation request failed:', response.status, errorText)
         throw new Error(`Request failed with status ${response.status}`)
       }
 
@@ -171,7 +177,8 @@ export const AgentAssistPage = () => {
       setDraft('')
       setNextSpeaker('tenant')
       setStatus('idle')
-    } catch {
+    } catch (error) {
+      console.error('Unable to clear conversation:', error)
       setStatus('error')
     }
   }
@@ -186,19 +193,21 @@ export const AgentAssistPage = () => {
         p: 3,
       }}
     >
-      <Box sx={{ width: '40%', flexShrink: 0, minWidth: 0, height: '100%' }}>
+      <Box sx={{ flex: 4, minWidth: 0, height: '100%' }}>
         <AgentAssistChat
+          channel={channel}
           draft={draft}
           nextSpeaker={nextSpeaker}
-        messages={messages}
-        onDraftChange={setDraft}
-        onNextSpeakerChange={setNextSpeaker}
-        onClearConversation={handleClearConversation}
-        onSubmit={handleSubmit}
-        status={status}
-      />
+          messages={messages}
+          onChannelChange={setChannel}
+          onDraftChange={setDraft}
+          onNextSpeakerChange={setNextSpeaker}
+          onClearConversation={handleClearConversation}
+          onSubmit={handleSubmit}
+          status={status}
+        />
       </Box>
-      <Box sx={{ width: '60%', flexShrink: 0, minWidth: 0, height: '100%' }}>
+      <Box sx={{ flex: 6, minWidth: 0, height: '100%' }}>
         <AgentAssistDataDisplay
           analysis={assistantAnalysis}
           status={status}

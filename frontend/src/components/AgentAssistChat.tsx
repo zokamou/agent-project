@@ -3,19 +3,22 @@ import {
   Button,
   Paper,
   Stack,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
-import type { AgentAssistChatProps } from '../types/ChatTypes'
+import type { AgentAssistChatProps, ChannelType } from '../types/ChatTypes'
 import { AgentChatMessage } from './AgentChatMessage'
 import { ChatInput } from './ChatInput'
 import { UserChatMessage } from './UserChatMessage'
 
+
+const channelArray: ChannelType[] = ['chat', 'email', 'phone'] 
+
 export const AgentAssistChat = ({
+  channel,
   draft,
   nextSpeaker,
   messages,
+  onChannelChange,
   onDraftChange,
   onNextSpeakerChange,
   onClearConversation,
@@ -47,29 +50,78 @@ export const AgentAssistChat = ({
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2,
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            gap: 1.5,
           }}
         >
-          <Typography
-            variant="overline"
+          <Box
             sx={{
-              color: 'secondary.main',
-              letterSpacing: '0.16em',
-              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
             }}
           >
-            Conversation
-          </Typography>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={onClearConversation}
-            disabled={status === 'submitting'}
+            <Typography
+              variant="overline"
+              sx={{
+                color: 'secondary.main',
+                letterSpacing: '0.16em',
+                fontWeight: 700,
+              }}
+            >
+              Conversation
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={onClearConversation}
+              disabled={status === 'submitting'}
+            >
+              Start new chat
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.75,
+              p: 0.5,
+              borderRadius: 999,
+              backgroundColor: 'common.white',
+              border: '1px solid',
+              borderColor: 'divider',
+              width: 'fit-content',
+            }}
           >
-            Start new chat
-          </Button>
+            {channelArray.map((channelOption) => {
+              const isSelected = channel === channelOption
+
+              return (
+                <Button
+                  key={channelOption}
+                  onClick={() => onChannelChange(channelOption)}
+                  disabled={status === 'submitting'}
+                  sx={{
+                    minWidth: 0,
+                    px: 2,
+                    py: 0.75,
+                    borderRadius: 999,
+                    textTransform: 'capitalize',
+                    fontWeight: 600,
+                    color: isSelected ? 'primary.contrastText' : 'text.secondary',
+                    backgroundColor: isSelected ? 'primary.main' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: isSelected ? 'primary.dark' : 'warning.light',
+                    },
+                  }}
+                >
+                  {channelOption}
+                </Button>
+              )
+            })}
+          </Box>
         </Box>
 
         <Paper
@@ -126,24 +178,46 @@ export const AgentAssistChat = ({
               >
                 Send the next message as
               </Typography>
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={nextSpeaker}
-                onChange={(_, value) => {
-                  if (value) {
-                    onNextSpeakerChange(value)
-                  }
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  p: 0.5,
+                  borderRadius: 999,
+                  backgroundColor: 'common.white',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  width: 'fit-content',
                 }}
-                sx={{ gap: 1 }}
               >
-                <ToggleButton value="tenant" disabled={status === 'submitting'}>
-                  Tenant
-                </ToggleButton>
-                <ToggleButton value="employee" disabled={status === 'submitting'}>
-                  Employee
-                </ToggleButton>
-              </ToggleButtonGroup>
+                {(['tenant', 'employee'] as const).map((speakerOption) => {
+                  const isSelected = nextSpeaker === speakerOption
+
+                  return (
+                    <Button
+                      key={speakerOption}
+                      onClick={() => onNextSpeakerChange(speakerOption)}
+                      disabled={status === 'submitting'}
+                      sx={{
+                        minWidth: 0,
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 999,
+                        textTransform: 'capitalize',
+                        fontWeight: 600,
+                        color: isSelected ? 'primary.contrastText' : 'text.secondary',
+                        backgroundColor: isSelected ? 'primary.main' : 'transparent',
+                        '&:hover': {
+                          backgroundColor: isSelected ? 'primary.dark' : 'warning.light',
+                        },
+                      }}
+                    >
+                      {speakerOption}
+                    </Button>
+                  )
+                })}
+              </Box>
             </Box>
             <ChatInput
               id="conversation-message-input"

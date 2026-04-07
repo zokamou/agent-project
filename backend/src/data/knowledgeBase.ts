@@ -16,42 +16,27 @@ const workbookPath = path.join(
   'Storage King USA - swivl Property Manager Export.xlsx'
 )
 
-// using a map here instead of an llm call
-// another alternative would be to have the llm come up with a list of relevant keywords,
-// then using these keywords to do a secondary search in pinecone to find the data
-// a map was much faster and easier to update, but less flexible
-// could easily be swapped out with an llm call
-const relatedCategoryMap: Record<string, string[]> = {
-  'move out policy': ['Prorate', 'Cancellation','Cut Locks', 'Refunds', 'Dollies'],
-  'past due': ['Overlock', 'Late Fee', 'Payment Extension', 'Grace Period'],
-  'gate code': ['After Hours Access', 'Facility Access', 'Padlock / DaVinci Access'],
-  'reset password': ['Forgot Username', 'Mobile App'],
-  'unit size': ['Pricing', 'Insurance Cost', 'Climate Control']
-}
-
-
 export const syncToPinecone = async (items: KnowledgeItem[]) => {
-
   const BATCH_SIZE = 50
 
-  const validItems = items.filter(item => item.content && item.content.trim().length > 0);
+  const validItems = items.filter(
+    (item) => item.content && item.content.trim().length > 0
+  )
 
   const records = validItems.map((item) => ({
     _id: item.id,
     text: item.content,
     category: item.category,
     title: item.title,
-    relatedCategories: item.relatedCategories,
-  }));
+  }))
 
   for (let i = 0; i < records.length; i += BATCH_SIZE) {
     const batch = records.slice(i, i + BATCH_SIZE)
-    await index.upsertRecords({ records: batch });
+    await index.upsertRecords({ records: batch })
   }
-  
-  console.log(`Successfully synced ${records.length} items to Pinecone.`);
-};
 
+  console.log(`Successfully synced ${records.length} items to Pinecone.`)
+}
 
 export const loadKnowledgeBase = async (): Promise<void> => {
   const workbook = XLSX.readFile(workbookPath)
@@ -78,14 +63,11 @@ export const loadKnowledgeBase = async (): Promise<void> => {
       continue
     }
 
-    const normalizedCategory = worksheetName.toLowerCase()
-
     loadedKnowledgeItems.push({
       id: `${worksheetName}-${title}-${index}`,
       category: worksheetName,
       title,
       content,
-      relatedCategories: relatedCategoryMap[normalizedCategory] ?? [],
     })
   }
 

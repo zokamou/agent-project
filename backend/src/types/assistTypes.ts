@@ -1,6 +1,7 @@
-import { KnowledgeItem } from "./knowledgeBaseTypes"
+import type { KnowledgeItem } from './knowledgeBaseTypes'
 
 export type ConversationRole = 'tenant' | 'employee'
+export type ChannelType = 'chat' | 'email' | 'phone'
 
 export type ConversationMessage = {
   id?: string
@@ -9,49 +10,35 @@ export type ConversationMessage = {
 }
 
 export type AssistRequest = {
-  latestTenantMessage?: string
-  conversation?: ConversationMessage[]
-  question?: string
+  latestTenantMessage: string
+  channel?: ChannelType
 }
 
 export type EmployeeMessageRequest = {
   message: string
-  conversation?: ConversationMessage[]
-}
-
-export type MatchedKnowledgeItem = KnowledgeItem & {
-  matchReason: string
 }
 
 export interface PineconeMetadata {
-  category: string;
-  title: string;
-  text: string; 
-  relatedCategories: string[];
+  category: string
+  title: string
+  text: string
 }
 
 export type AgentAssistAnalysis = {
-  currentIntent: string
-  conversationSummary: string
   suggestedReply: string
-  reasoning: string
+  sourcesUsed: string
 }
 
 export type AssistResponse = {
-  question: string
-  message: string
-  currentIntent: string
-  conversationSummary: string
-  matchedItems: MatchedKnowledgeItem[]
+  matchedItems: KnowledgeItem[]
   relatedItems: KnowledgeItem[]
   relatedCategories: string[]
   suggestedReply: string
+  usedSources: string
   conversation: ConversationMessage[]
 }
 
 export type EmployeeMessageResponse = {
-  message: string
-  role: 'employee'
   conversation: ConversationMessage[]
 }
 

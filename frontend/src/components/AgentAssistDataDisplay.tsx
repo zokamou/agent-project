@@ -57,7 +57,6 @@ export const AgentAssistDataDisplay = ({
             p: 3,
           }}
         >
-
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignContent: 'center', justifyContent: 'space-between', alignItems: 'center'}}>
           <Typography
             variant="subtitle1"
@@ -74,8 +73,13 @@ export const AgentAssistDataDisplay = ({
             </Typography>
           </Button>
           </Box>
-          <Typography sx={{ mt: 2, color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
-            {analysis?.suggestedReply}
+          <Typography sx={{ mt: 2, color: 'text.primary', whiteSpace: 'pre-wrap' }}>
+            {status === 'submitting'
+              ? 'Analyzing...'
+              : analysis?.suggestedReply}
+          </Typography>
+          <Typography sx={{ mt: 2, color: 'text.secondary', fontSize: '0.875rem' }}>
+            {analysis?.usedSources && status !== 'submitting' ? `Used sources: ${analysis.usedSources}` : ''}
           </Typography>
         </Paper>
 
@@ -95,7 +99,11 @@ export const AgentAssistDataDisplay = ({
           <Typography variant="subtitle1" sx={{ color: 'text.primary', fontWeight: 700 }}>
             Top matches
           </Typography>
-          {analysis?.matchedItems?.length ? (
+          {status === 'submitting' ? (
+            <Typography sx={{ color: 'text.secondary' }}>
+              Analyzing...
+            </Typography>
+          ) : analysis?.matchedItems?.length ? (
             analysis.matchedItems.map((item) => (
               <Paper
                 key={item.id}
@@ -127,16 +135,23 @@ export const AgentAssistDataDisplay = ({
               Related categories
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {analysis?.relatedCategories?.length && (
+              {status === 'submitting' ? (
+                <Typography sx={{ color: 'text.secondary' }}>
+                  Analyzing...
+                </Typography>
+              ) : analysis?.relatedCategories?.length ? (
                 analysis.relatedCategories.map((category) => (
                   <Chip key={category} label={category} color="secondary" variant="outlined" />
                 ))
-              )
-            }
+              ) : null}
             </Box>
           </Box>
 
-          {analysis?.relatedItems?.length ? (
+          {status === 'submitting' ? (
+            <Typography sx={{ color: 'text.secondary' }}>
+              Analyzing...
+            </Typography>
+          ) : analysis?.relatedItems?.length ? (
             analysis.relatedItems.map((item) => (
               <Paper
                 key={item.id}

@@ -3,5 +3,4 @@ export type KnowledgeItem = {
   category: string
   title: string
   content: string
-  relatedCategories: string[]
 }

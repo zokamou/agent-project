@@ -38,15 +38,11 @@ export const handleTenantMessageRequest = async (
   res: AssistResponseHttp
 ) => {
   const assistRequest = req.body
-  const latestTenantMessage =
-    assistRequest.latestTenantMessage ?? assistRequest.question ?? ''
+  const latestTenantMessage = assistRequest.latestTenantMessage?.trim() ?? ''
 
   if (!latestTenantMessage) {
     res.status(400).json({
-      message: 'A tenant message is required.',
-      question: '',
-      currentIntent: '',
-      conversationSummary: '',
+      usedSources: '',
       matchedItems: [],
       relatedItems: [],
       relatedCategories: [],
@@ -57,15 +53,15 @@ export const handleTenantMessageRequest = async (
   }
 
   try {
-    const result = await getAssistResponse(assistRequest)
+    const result = await getAssistResponse({
+      latestTenantMessage,
+      channel: assistRequest.channel,
+    })
     res.status(200).json(result)
   } catch (error) {
+    console.error('Unable to handle tenant message request:', error)
     res.status(500).json({
-      message:
-        error instanceof Error ? error.message : 'An unknown error occurred.',
-      question: latestTenantMessage,
-      currentIntent: '',
-      conversationSummary: '',
+      usedSources: '',
       matchedItems: [],
       relatedItems: [],
       relatedCategories: [],
@@ -83,8 +79,6 @@ export const handleEmployeeMessageRequest = async (
 
   if (!employeeMessage) {
     res.status(400).json({
-      message: 'An employee message is required.',
-      role: 'employee',
       conversation: [],
     })
     return
@@ -93,15 +87,12 @@ export const handleEmployeeMessageRequest = async (
   try {
     const result = await createEmployeeMessage({
       message: employeeMessage,
-      conversation: req.body.conversation,
     })
 
     res.status(200).json(result)
   } catch (error) {
+    console.error('Unable to handle employee message request:', error)
     res.status(500).json({
-      message:
-        error instanceof Error ? error.message : 'An unknown error occurred.',
-      role: 'employee',
       conversation: [],
     })
   }

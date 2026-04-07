@@ -8,7 +8,6 @@ import {
 
 export const assistRouter = Router()
 
-assistRouter.post('/assist', handleTenantMessageRequest)
 assistRouter.post('/tenant-message', handleTenantMessageRequest)
 assistRouter.post('/employee-message', handleEmployeeMessageRequest)
 assistRouter.get('/messages', handleGetConversationRequest)
