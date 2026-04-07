@@ -11,7 +11,7 @@ import { ChatInput } from './ChatInput'
 import { UserChatMessage } from './UserChatMessage'
 
 
-const channelArray: ChannelType[] = ['chat', 'email', 'phone'] 
+const channelArray: ChannelType[] = ['chat', 'email']
 
 export const AgentAssistChat = ({
   channel,

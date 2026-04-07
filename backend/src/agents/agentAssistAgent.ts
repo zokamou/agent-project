@@ -35,18 +35,23 @@ export const generateAssistAnalysis = async (
     throw new Error('OPENAI_API_KEY is not configured')
   }
 
+  // only grabbing last 5 messages to keep context short and snappy
   const recentHistory = getConversationMessages().slice(-5)
   const itemsToProcess = matchedKnowledgeItems.slice(0, 3)
   const relatedToProcess = relatedKnowledgeItems.slice(0, 3)
 
+
+  // dynamic systen prompt
+  // this often doesnt change, open ai recongnized this and loads existing prompts from cache
   const systemPrompt = `
     ${identity}
     ${guardrails}
     ${style}
   `
 
+  // context window builder for dynamic prompt construction
+  // only feeding llm relevant knowledge so it doesnt have to parse through every data point
   const knowledgeContext = `
-
     Directly relevant policies:
     ${itemsToProcess
       .map(
@@ -74,6 +79,8 @@ export const generateAssistAnalysis = async (
     ${latestTenantMessage}
     `
 
+  // using 4o mini open ai model
+  // structured output with json schema to make output predictable and easy to parse
   const response = await openAiClient.responses.create({
     model: openAiModel,
     max_output_tokens: 200,

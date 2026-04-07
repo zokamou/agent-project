@@ -1,7 +1,7 @@
 import type { KnowledgeItem } from './knowledgeBaseTypes'
 
 export type ConversationRole = 'tenant' | 'employee'
-export type ChannelType = 'chat' | 'email' | 'phone'
+export type ChannelType = 'chat' | 'email'
 
 export type ConversationMessage = {
   id?: string

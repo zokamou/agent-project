@@ -17,12 +17,19 @@ const workbookPath = path.join(
 )
 
 export const syncToPinecone = async (items: KnowledgeItem[]) => {
+
+  // pinecone has limits on batch size, so we upload data in chunks 
   const BATCH_SIZE = 50
 
+  // some rows are invalid/dont have any data, so we remove them
   const validItems = items.filter(
     (item) => item.content && item.content.trim().length > 0
   )
 
+
+  // mapping internal data type to pinecone record format
+  // pinecone needs text and id
+  // all other fields are stored as metadata and can be used for filtering
   const records = validItems.map((item) => ({
     _id: item.id,
     text: item.content,
@@ -46,6 +53,10 @@ export const loadKnowledgeBase = async (): Promise<void> => {
     throw new Error('No sheets found in the knowledge base workbook.')
   }
 
+  // right now we are assuming there are 3 columns:
+  // worksheet, variable, and value
+  // in a producion scenario, i would implement a scraper that can parse this data into my internal data type
+  // i would also have scrapers for different data formats (csv, json, pdf, etc) 
   const worksheet = workbook.Sheets[firstSheetName]
   const rows = XLSX.utils.sheet_to_json<SpreadsheetRow>(worksheet, {
     range: 2,

@@ -1,6 +1,6 @@
 export type ChatRole = 'user' | 'agent'
 export type ComposerRole = 'tenant' | 'employee'
-export type ChannelType = 'chat' | 'email' | 'phone'
+export type ChannelType = 'chat' | 'email'
 
 export type ChatMessage = {
   id: string
